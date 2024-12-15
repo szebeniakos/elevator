@@ -8,7 +8,7 @@ const ElevatorContext = createContext<ElevatorContextType | undefined>(
 export const ElevatorProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  /* The solution functionally should be working with more than two elevators as well, however I can't guarantee the UI will reward the idea of adding more */
+  /* The solution functionally should be working with more than two elevators as well, however the UI is optimized for only two */
   const [elevators, setElevators] = useState<ElevatorType[]>([
     {
       id: 0,
@@ -31,7 +31,7 @@ export const ElevatorProvider: React.FC<{ children: React.ReactNode }> = ({
       name: "C",
       currentLevel: 4,
       direction: 0,
-      destinationLevel: 6,
+      destinationLevel: 4,
       isBusy: false,
     }, */
   ]);

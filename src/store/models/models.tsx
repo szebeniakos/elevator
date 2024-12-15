@@ -16,11 +16,17 @@ export type ElevatorContextType = {
   setElevators: React.Dispatch<React.SetStateAction<ElevatorType[]>>;
 };
 
+export enum Direction {
+  Idle = 0,
+  Up = 1,
+  Down = -1,
+}
+
 export interface ElevatorType {
   id: number;
   name: string;
   currentLevel: number;
   destinationLevel: number;
-  direction: number;
+  direction: Direction;
   isBusy: boolean;
 }

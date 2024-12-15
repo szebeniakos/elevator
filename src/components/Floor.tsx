@@ -1,13 +1,14 @@
 import Elevator from "./Elevator";
 import { FloorProps, ElevatorType } from "../store/models/models";
 import { useElevator } from "../context/ElevatorContext";
-import {
-  ELEVATOR_DELAY,
-  ELEVATOR_DIRECTIONS,
-} from "../store/constants/constants";
-import { sleep } from "../store/utils/utils";
+import { moveElevator } from "../store/shared/shared";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronUp } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowDown,
+  faArrowUp,
+  faChevronUp,
+  faCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 
 const Floor = (props: FloorProps) => {
@@ -17,7 +18,27 @@ const Floor = (props: FloorProps) => {
   /* Returns the closest elevator object to a specific floor */
   const getClosestElevator = (currentFloor: number) => {
     if (!elevators || elevators.length === 0) {
-      console.log("No elevators available!");
+      console.error("No elevators available!");
+      return null;
+    }
+    if (
+      elevators.some(
+        (elevator) =>
+          !elevator.isBusy && elevator.destinationLevel === currentFloor
+      )
+    ) {
+      console.log("A free elevator is already on this this floor. Aborting...");
+      return null;
+    }
+    if (
+      elevators.some(
+        (elevator) =>
+          elevator.isBusy && elevator.destinationLevel === currentFloor
+      )
+    ) {
+      console.log(
+        "An elevator is already on its way to this floor. Aborting..."
+      );
       return null;
     }
 
@@ -69,86 +90,38 @@ const Floor = (props: FloorProps) => {
 
     if (!selectedElevator) return;
 
-    const { currentLevel } = selectedElevator;
-    const direction =
-      toFloor > currentLevel
-        ? ELEVATOR_DIRECTIONS.UP
-        : ELEVATOR_DIRECTIONS.DOWN;
-
-    /* We move the lift level by level to the specific direction */
-    for (let level = currentLevel; level !== toFloor; level += direction) {
-      setElevators((prevElevators) =>
-        prevElevators.map((e) =>
-          e.id === selectedElevator.id
-            ? {
-                ...e,
-                currentLevel: level,
-                direction,
-                destinationLevel: toFloor,
-                isBusy: true,
-              }
-            : e
-        )
-      );
-      console.log(
-        `Elevator ${selectedElevator.name} is moving to floor ${
-          level + direction
-        }`
-      );
-      await sleep(ELEVATOR_DELAY);
-    }
-
-    setElevators((prevElevators) =>
-      prevElevators.map((e) =>
-        e.id === selectedElevator.id
-          ? {
-              ...e,
-              currentLevel: toFloor,
-              direction: 0,
-              destinationLevel: toFloor,
-              isBusy: false,
-            }
-          : e
-      )
-    );
-    console.log(
-      `Elevator ${selectedElevator.name} has arrived to floor ${toFloor}`
-    );
+    moveElevator(selectedElevator, toFloor, setElevators);
   };
 
   return (
     <div
       key={floorLevel}
-      className="row-span-12 p-4 flex justify-between items-center border bg-gray-100"
+      className="row-span-12 p-4 flex justify-between items-center border bg-gray-100 min-w-200"
     >
-      <div className="flex items-center space-x-2">
-        <div>Floor {floorLevel}</div>
+      <div className="flex items-center space-x-4">
+        <div className="text-lg font-medium">Floor {floorLevel}</div>
         <button
-          className="w-8 h-8 text-green-600 text-sm font-bold rounded-full shadow-md hover:text-green-700 border-2 border-green-600 flex items-center justify-center"
+          className="w-10 h-10 text-white bg-green-600 text-sm font-bold rounded-full shadow-md border-2 border-green-600 flex items-center justify-center transition-transform transform hover:scale-110 hover:bg-green-700 hover:shadow-lg"
           onClick={() => callElevator(floorLevel)}
         >
-          <FontAwesomeIcon icon={faChevronUp} className="text-green-600" />
+          <FontAwesomeIcon icon={faChevronUp} className="text-white" />
         </button>
         <button
-          className="w-8 h-8 text-red-600 text-sm font-bold rounded-full shadow-md hover:text-red-700 border-2 border-red-600 flex items-center justify-center"
+          className="w-10 h-10 text-white bg-red-600 text-sm font-bold rounded-full shadow-md border-2 border-red-600 flex items-center justify-center transition-transform transform hover:scale-110 hover:bg-red-700 hover:shadow-lg"
           onClick={() => callElevator(floorLevel)}
         >
-          <FontAwesomeIcon icon={faChevronDown} className="text-red-600" />
+          <FontAwesomeIcon icon={faChevronDown} className="text-white" />
         </button>
       </div>
       {/* Elevators */}
       <div className="grid grid-cols-2 gap-4">
         {elevators.map((elevator) =>
           elevator.currentLevel === floorLevel ? (
-            <div className="flex justify-center" key={elevator.id}>
+            <div className="flex justify-center min-h-25" key={elevator.id}>
               <Elevator elevator={elevator} />
             </div>
           ) : (
-            <div
-              className="flex justify-center"
-              style={{ minHeight: "100px" }}
-              key={elevator.id}
-            >
+            <div className="flex justify-center min-h-25" key={elevator.id}>
               {/* Placeholder */}
             </div>
           )
@@ -161,11 +134,11 @@ const Floor = (props: FloorProps) => {
             <span className="font-bold">{elevator.name}:</span>
             <div className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200">
               {elevator.direction > 0 ? (
-                <span className="text-green-500">⬆</span>
+                <FontAwesomeIcon icon={faArrowUp} className="text-green-500" />
               ) : elevator.direction < 0 ? (
-                <span className="text-red-500">⬇</span>
+                <FontAwesomeIcon icon={faArrowDown} className="text-red-500" />
               ) : (
-                <span className="text-gray-500">●</span>
+                <FontAwesomeIcon icon={faCircle} className="text-gray-500" />
               )}
             </div>
           </div>

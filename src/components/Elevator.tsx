@@ -1,16 +1,15 @@
-import { ElevatorProps } from "../store/models/models";
+import { Direction, ElevatorProps } from "../store/models/models";
+import { FLOORS } from "../store/constants/constants";
+import { moveElevator } from "../store/shared/shared";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { useElevator } from "../context/ElevatorContext";
-import {
-  ELEVATOR_DELAY,
-  ELEVATOR_DIRECTIONS,
-  FLOORS,
-} from "../store/constants/constants";
-import { sleep } from "../store/utils/utils";
 
 const Elevator = (props: ElevatorProps) => {
-  const { id, name, direction, currentLevel, isBusy } = props.elevator;
-  const { setElevators } = useElevator();
+  const { name, direction, currentLevel, isBusy } = props.elevator;
   const floors = FLOORS;
+
+  const { setElevators } = useElevator();
 
   const moveElevatorToFloor = async (toFloor: number) => {
     console.log(`Elevator ${name} was directed to floor ${toFloor}`);
@@ -18,70 +17,34 @@ const Elevator = (props: ElevatorProps) => {
       console.log(
         `Elevator ${name} is already on floor ${toFloor}. Aborting...`
       );
-      return;
+      return null;
     }
 
     if (isBusy) {
       console.log(`Elevator ${name} is already in move. Aborting... `);
-      return;
+      return null;
     }
-
-    const direction =
-      toFloor > currentLevel
-        ? ELEVATOR_DIRECTIONS.UP
-        : ELEVATOR_DIRECTIONS.DOWN;
-
-    /* We move the lift level by level to the specific direction */
-    for (let level = currentLevel; level !== toFloor; level += direction) {
-      setElevators((prevElevators) =>
-        prevElevators.map((e) =>
-          e.id === id
-            ? {
-                ...e,
-                currentLevel: level,
-                direction,
-                destinationLevel: toFloor,
-                isBusy: true,
-              }
-            : e
-        )
-      );
-      console.log(`Elevator ${name} is moving to floor ${level + direction}`);
-      await sleep(ELEVATOR_DELAY);
-    }
-    setElevators((prevElevators) =>
-      prevElevators.map((e) =>
-        e.id === id
-          ? {
-              ...e,
-              currentLevel: toFloor,
-              direction: 0,
-              destinationLevel: toFloor,
-              isBusy: false,
-            }
-          : e
-      )
-    );
-    console.log(`Elevator ${name} has arrived to floor ${toFloor}`);
+    moveElevator(props.elevator, toFloor, setElevators);
   };
 
   return (
     <>
       <div className="flex flex-col items-center bg-gray-100 border border-gray-400 p-4 rounded-lg shadow-md">
-        <div className="flex space-x-1">
-          <div className="w-8 h-8 bg-blue-500 text-center text-white font-bold mb-2">
+        {/* Elevator state indicators */}
+        <div className="flex space-x-1 mb-2">
+          <div className="w-8 h-8 bg-blue-500 text-center text-white font-bold flex items-center justify-center rounded">
             {name}
           </div>
-          <span className="w-8 h-8 bg-black text-white flex items-center justify-center rounded">
+          <span className="w-8 h-8 bg-black text-white font-bold flex items-center justify-center rounded">
             {currentLevel}
           </span>
-          {direction === ELEVATOR_DIRECTIONS.UP ? (
+          {direction === Direction.Up ? (
             <div className="w-8 h-8 bg-green-500 text-white flex items-center justify-center rounded">
-              ↑
+              <FontAwesomeIcon icon={faChevronUp} />
             </div>
-          ) : direction === ELEVATOR_DIRECTIONS.DOWN ? (
+          ) : direction === Direction.Down ? (
             <div className="w-8 h-8 bg-red-500 text-white flex items-center justify-center rounded">
-              ↓
+              <FontAwesomeIcon icon={faChevronDown} />
             </div>
           ) : (
             <div className="w-8 h-8 bg-gray-400 text-white flex items-center justify-center rounded">
@@ -89,12 +52,12 @@ const Elevator = (props: ElevatorProps) => {
             </div>
           )}
         </div>
-
+        {/* Elevator buttons */}
         <div className="flex flex-wrap space-x-1">
           {floors.map((floor) => (
             <button
               key={floor}
-              className="w-6 h-6 bg-cyan-200 text-gray text-xs rounded"
+              className="w-6 h-6 bg-cyan-200 text-gray-700 font-bold text-xs rounded transition-transform transform hover:scale-105 hover:bg-cyan-300"
               onClick={() => moveElevatorToFloor(floor)}
             >
               {floor}

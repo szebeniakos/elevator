@@ -1,4 +1,11 @@
 
+# Run the project locally
+
+```
+npm i
+npm run dev
+```
+
 # Elevator
 
 Your mission should you choose to accept it, is to design a system that controls the elevator in a building with 7 storeys (indexed 0-6). A visual interface (UI) is optional but it's recommended. Focus on working with functions and objects first.
